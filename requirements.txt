@@ -1,2 +1,3 @@
 # This project currently uses only Python standard library modules.
 # No third-party pip packages are required.
+# Runtime dependency (non-pip): Android platform tools `adb` must be installed and in PATH.
