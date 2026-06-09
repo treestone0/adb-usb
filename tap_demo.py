@@ -23,6 +23,11 @@ def parse_args():
         default="areas.json",
         help="Path to JSON config file (default: areas.json)",
     )
+    parser.add_argument(
+        "--sequences",
+        default="sequences.json",
+        help="Path to sequences JSON config file (default: sequences.json)",
+    )
     return parser.parse_args()
 
 
@@ -40,6 +45,56 @@ def load_config(config_path: Path):
         raise ValueError("Config JSON root must be an object.")
 
     return data
+
+
+def load_sequences(sequences_path: Path):
+    """Load optional sequences config. Returns empty dict if file doesn't exist."""
+    if not sequences_path.exists():
+        return {}
+
+    try:
+        with sequences_path.open("r", encoding="utf-8") as f:
+            data = json.load(f)
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid JSON format in {sequences_path}: {exc}") from exc
+
+    if not isinstance(data, dict):
+        raise ValueError("Sequences JSON root must be an object.")
+
+    return data
+
+
+def run_sequence(config: dict, sequences: dict, seq_id: str):
+    if seq_id not in sequences:
+        raise KeyError(f"Sequence '{seq_id}' not found in sequences config.")
+
+    seq_data = sequences[seq_id]
+    steps = seq_data.get("steps")
+    if not isinstance(steps, list) or len(steps) == 0:
+        raise ValueError(f"Sequence '{seq_id}' must have a non-empty 'steps' list.")
+
+    print(f"Running sequence: {seq_id} ({len(steps)} steps)")
+    for i, step in enumerate(steps):
+        area_id = str(step.get("area", ""))
+        if not area_id:
+            raise ValueError(f"Step {i + 1} in sequence '{seq_id}' is missing 'area'.")
+
+        run_area_once(config, area_id)
+
+        if i < len(steps) - 1:
+            delay_min = int(step.get("delay_after_min_ms", 0))
+            delay_max = int(step.get("delay_after_max_ms", delay_min))
+            if delay_min > delay_max:
+                raise ValueError(
+                    f"Step {i + 1} in sequence '{seq_id}': "
+                    "delay_after_min_ms cannot be greater than delay_after_max_ms."
+                )
+            if delay_max > 0:
+                wait_ms = random.randint(delay_min, delay_max)
+                print(f"  Waiting {wait_ms} ms before next step...")
+                time.sleep(wait_ms / 1000.0)
+
+    print(f"Sequence '{seq_id}' completed.")
 
 
 def get_random_point(area_data: dict):
@@ -168,9 +223,14 @@ def run_area_once(config: dict, area_id: str):
         raise ValueError(f"Unsupported action '{action}' in area '{area_id}'.")
 
 
-def interactive_loop(config: dict):
+def interactive_loop(config: dict, sequences: dict):
+    has_sequences = bool(sequences)
     print("Interactive mode started.")
-    print("Press a configured key to run action, press 0 to exit (no Enter needed).")
+    if has_sequences:
+        print("Press a sequence key or area key to run action, press 0 to exit (no Enter needed).")
+        print(f"  Sequence keys: {', '.join(sorted(sequences.keys()))}")
+    else:
+        print("Press a configured key to run action, press 0 to exit (no Enter needed).")
 
     while True:
         print("Key> ", end="", flush=True)
@@ -185,7 +245,10 @@ def interactive_loop(config: dict):
             break
 
         try:
-            run_area_once(config, user_input)
+            if user_input in sequences:
+                run_sequence(config, sequences, user_input)
+            else:
+                run_area_once(config, user_input)
         except Exception as exc:
             print(f"Error: {exc}", file=sys.stderr)
 
@@ -194,12 +257,15 @@ def main():
     args = parse_args()
     config_path = Path(args.config)
 
+    sequences_path = Path(args.sequences)
+
     try:
         config = load_config(config_path)
+        sequences = load_sequences(sequences_path)
         if args.area:
             run_area_once(config, str(args.area))
         else:
-            interactive_loop(config)
+            interactive_loop(config, sequences)
     except Exception as exc:
         print(f"Error: {exc}", file=sys.stderr)
         sys.exit(1)

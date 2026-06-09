@@ -1,11 +1,13 @@
 {
   "1": {
+    "comment": "fight button",
     "x_min": 625,
     "x_max": 1013,
     "y_min": 1875,
     "y_max": 1950
   },
   "2": {
+    "comment": ">> button",
     "x_min": 853,
     "x_max": 905,
     "y_min": 138,
@@ -28,6 +30,7 @@
     }
   },
   "4": {
+    "comment": "reply button",
     "x_min": 181,
     "x_max": 481,
     "y_min": 1938,

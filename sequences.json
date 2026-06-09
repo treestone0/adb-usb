@@ -1,0 +1,16 @@
+{
+  "a": {
+    "steps": [
+      { "area": "1", "delay_after_min_ms": 4000, "delay_after_max_ms": 5000 },
+      { "area": "2", "delay_after_min_ms": 50000, "delay_after_max_ms": 70000 },
+      { "area": "3", "delay_after_min_ms": 2000, "delay_after_max_ms": 3000 },
+      { "area": "4" }
+    ]
+  },
+  "b": {
+    "steps": [
+      { "area": "4", "delay_after_min_ms": 1000, "delay_after_max_ms": 2000 },
+      { "area": "1" }
+    ]
+  }
+}
