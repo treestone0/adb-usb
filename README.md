@@ -32,6 +32,7 @@ You should see at least one device in `device` state.
 
 - `tap_demo.py`: demo script
 - `areas.json`: sample area config
+- `sequences.json`: optional key-to-sequence config
 
 ## Run
 
@@ -50,7 +51,49 @@ python3 tap_demo.py
 Then input:
 
 - any configured key (for example `1/2/3/4`): execute that area's action
+- any configured sequence key (for example `a/b` in `sequences.json`): execute the sequence
 - `0`: exit the program
+
+## Sequence Config (`sequences.json`)
+
+`sequences.json` maps one trigger key to an ordered list of area actions. Each step references one area id from `areas.json`.
+
+Example:
+
+```json
+{
+  "a": {
+    "steps": [
+      { "area": "1", "delay_after_min_ms": 500, "delay_after_max_ms": 1500 },
+      { "area": "2", "delay_after_min_ms": 300, "delay_after_max_ms": 800 },
+      { "area": "3" }
+    ]
+  }
+}
+```
+
+Fields:
+
+- `area`: required, area id from `areas.json`
+- `delay_after_min_ms`: optional, minimum wait before next step
+- `delay_after_max_ms`: optional, maximum wait before next step (defaults to min if omitted)
+
+Run with custom sequences file:
+
+```bash
+python3 tap_demo.py --sequences /path/to/sequences.json
+```
+
+If the sequences file does not exist, interactive mode still works with area keys only.
+
+## Preemption Behavior (Last Input Wins)
+
+Interactive execution is preemptive:
+
+- While a sequence is running, pressing a new key cancels the remaining sequence steps.
+- The script always switches to the latest key you pressed.
+- If multiple keys are pressed quickly, only the last key is kept.
+- If one adb command is already running (`tap`/`swipe`), the command is not force-killed; switch happens immediately after that command returns.
 
 One-time mode with default config (`areas.json`):
 
