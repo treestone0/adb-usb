@@ -35,5 +35,12 @@
     "x_max": 481,
     "y_min": 1938,
     "y_max": 2013
+  },
+  "5": {
+    "comment": "3rd hero portrait (red highlighted), scaled 864x1920 screenshot -> 1080x2400 device (x1.25)",
+    "x_min": 400,
+    "x_max": 550,
+    "y_min": 1950,
+    "y_max": 2100
   }
 }
